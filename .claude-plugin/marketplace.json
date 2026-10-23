@@ -1,0 +1,12 @@
+{
+  "name": "dbarchitect-local",
+  "owner": { "name": "Database Architect Studio" },
+  "description": "Marketplace local para instalar o Database Architect Studio a partir deste repositório.",
+  "plugins": [
+    {
+      "name": "database-architect-studio",
+      "source": "./",
+      "description": "Skill, agentes e servidor MCP local para modelagem de dados guiada por domínio."
+    }
+  ]
+}

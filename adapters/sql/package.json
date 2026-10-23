@@ -1,0 +1,8 @@
+{
+  "name": "@dbarchitect/adapter-sql",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@dbarchitect/core": "workspace:*", "@dbarchitect/generators": "workspace:*" }
+}

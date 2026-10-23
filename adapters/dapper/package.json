@@ -1,0 +1,8 @@
+{
+  "name": "@dbarchitect/adapter-dapper",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@dbarchitect/core": "workspace:*", "@dbarchitect/adapter-dotnet": "workspace:*", "@dbarchitect/adapter-sql": "workspace:*", "@dbarchitect/generators": "workspace:*" }
+}

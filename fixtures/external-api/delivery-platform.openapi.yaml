@@ -1,0 +1,42 @@
+openapi: 3.0.3
+info:
+  title: Delivery Platform API
+  version: "1.0"
+paths:
+  /orders:
+    post:
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreate'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderView'
+components:
+  schemas:
+    OrderCreate:
+      type: object
+      required: [externalId, items]
+      properties:
+        externalId: { type: string }
+        customerPhone: { type: string, nullable: true }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/OrderItem' }
+    OrderItem:
+      type: object
+      required: [sku, quantity]
+      properties:
+        sku: { type: string }
+        quantity: { type: integer }
+    OrderView:
+      type: object
+      required: [id, status]
+      properties:
+        id: { type: string, format: uuid }
+        status: { type: string }
+        deliveredAt: { type: string, format: date-time, nullable: true }

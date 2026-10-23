@@ -1,0 +1,8 @@
+{
+  "name": "@dbarchitect/project-scanner",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@dbarchitect/core": "workspace:*" }
+}

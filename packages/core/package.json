@@ -1,0 +1,8 @@
+{
+  "name": "@dbarchitect/core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts", "./node": "./src/node.ts", "./csm.schema.json": "./src/csm.schema.json" },
+  "dependencies": { "ajv": "^8.20.0" }
+}

@@ -1,0 +1,584 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://dbarchitect.local/schemas/csm-1.0.json",
+  "title": "Canonical Schema Model",
+  "description": "Database Architect Studio canonical model, format 1.0. Independent of ORM and database.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "formatVersion", "project", "status", "approvals", "conventions", "sources", "domain",
+    "entities", "relationships", "enums", "indexes", "contracts", "mappings", "queries",
+    "decisions", "questions", "hypotheses", "history"
+  ],
+  "properties": {
+    "formatVersion": { "const": "1.0" },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "mode", "rootDir", "languages", "frameworks", "profile"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "mode": { "enum": ["greenfield", "brownfield", "evolution"] },
+        "rootDir": { "type": "string" },
+        "description": { "type": "string" },
+        "languages": { "$ref": "#/definitions/strings" },
+        "frameworks": { "$ref": "#/definitions/strings" },
+        "orm": { "type": "string" },
+        "database": { "type": "string" },
+        "profile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["confirmed"],
+          "properties": {
+            "database": { "enum": ["postgresql", "sqlserver", "sqlite", "mysql"] },
+            "databaseVersion": { "type": "string" },
+            "language": { "type": "string" },
+            "framework": { "type": "string" },
+            "persistence": { "enum": ["ef-core", "prisma", "dapper", "sql"] },
+            "migrationStrategy": { "type": "string" },
+            "confirmed": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state", "revision", "updatedAt"],
+      "properties": {
+        "state": {
+          "enum": ["DISCOVERING", "ANALYZING", "DRAFT", "NEEDS_INPUT", "VALIDATING", "READY_FOR_REVIEW", "APPROVED", "GENERATING", "GENERATED", "FAILED"]
+        },
+        "revision": { "type": "integer", "minimum": 0 },
+        "updatedAt": { "type": "string" },
+        "reviewedAt": { "type": "string" },
+        "failure": { "type": "string" },
+        "lastValidation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["hash", "at", "blocking", "total"],
+          "properties": {
+            "hash": { "type": "string" },
+            "at": { "type": "string" },
+            "blocking": { "type": "integer", "minimum": 0 },
+            "total": { "type": "integer", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["stage", "revision", "hash", "approvedAt", "approvedBy"],
+        "properties": {
+          "stage": { "enum": ["domain", "model"] },
+          "revision": { "type": "integer" },
+          "hash": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+          "approvedAt": { "type": "string" },
+          "approvedBy": { "type": "string", "minLength": 1 },
+          "note": { "type": "string" },
+          "invalidatedAt": { "type": "string" }
+        }
+      }
+    },
+    "conventions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["naming", "primaryKeyStrategy", "tenancy"],
+      "properties": {
+        "naming": { "enum": ["snake_case", "PascalCase", "camelCase"] },
+        "primaryKeyStrategy": { "enum": ["uuid", "identity", "ulid", "natural", "undecided"] },
+        "tenancy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["strategy"],
+          "properties": {
+            "strategy": { "enum": ["none", "column", "schema", "database", "undecided"] },
+            "column": { "type": "string" }
+          }
+        },
+        "auditColumns": { "$ref": "#/definitions/strings" }
+      }
+    },
+    "sources": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "kind", "title", "importedAt"],
+        "properties": {
+          "id": { "$ref": "#/definitions/id" },
+          "kind": { "enum": ["description", "document", "openapi", "json-schema", "code"] },
+          "title": { "type": "string" },
+          "path": { "type": "string" },
+          "importedAt": { "type": "string" },
+          "excerpt": { "type": "string" }
+        }
+      }
+    },
+    "domain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["goals", "actors", "requirements", "glossary", "concepts", "conceptRelations", "rules", "lifecycles", "events", "contexts"],
+      "properties": {
+        "problem": { "type": "string" },
+        "goals": { "$ref": "#/definitions/strings" },
+        "actors": { "type": "array", "items": { "$ref": "#/definitions/actor" } },
+        "requirements": { "type": "array", "items": { "$ref": "#/definitions/requirement" } },
+        "glossary": { "type": "array", "items": { "$ref": "#/definitions/glossaryTerm" } },
+        "concepts": { "type": "array", "items": { "$ref": "#/definitions/concept" } },
+        "conceptRelations": { "type": "array", "items": { "$ref": "#/definitions/conceptRelation" } },
+        "rules": { "type": "array", "items": { "$ref": "#/definitions/rule" } },
+        "lifecycles": { "type": "array", "items": { "$ref": "#/definitions/lifecycle" } },
+        "events": { "type": "array", "items": { "$ref": "#/definitions/event" } },
+        "contexts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "name"],
+            "properties": {
+              "id": { "$ref": "#/definitions/id" },
+              "name": { "type": "string" },
+              "description": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "entities": { "type": "array", "items": { "$ref": "#/definitions/entity" } },
+    "relationships": { "type": "array", "items": { "$ref": "#/definitions/relationship" } },
+    "enums": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "values", "provenance"],
+        "properties": {
+          "id": { "$ref": "#/definitions/id" },
+          "name": { "type": "string", "minLength": 1 },
+          "values": { "$ref": "#/definitions/strings" },
+          "provenance": { "$ref": "#/definitions/provenance" }
+        }
+      }
+    },
+    "indexes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "entity", "attributes", "unique", "provenance"],
+        "properties": {
+          "id": { "$ref": "#/definitions/id" },
+          "entity": { "$ref": "#/definitions/id" },
+          "name": { "type": "string" },
+          "attributes": { "type": "array", "items": { "$ref": "#/definitions/id" }, "minItems": 1 },
+          "unique": { "type": "boolean" },
+          "method": { "enum": ["btree", "hash", "gin", "gist"] },
+          "where": { "type": "string" },
+          "rationale": { "type": "string" },
+          "provenance": { "$ref": "#/definitions/provenance" }
+        }
+      }
+    },
+    "contracts": { "type": "array", "items": { "$ref": "#/definitions/contract" } },
+    "mappings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "contract", "field", "treatment", "provenance"],
+        "properties": {
+          "id": { "$ref": "#/definitions/id" },
+          "contract": { "$ref": "#/definitions/id" },
+          "field": { "type": "string" },
+          "entity": { "$ref": "#/definitions/id" },
+          "attribute": { "$ref": "#/definitions/id" },
+          "treatment": { "enum": ["stored", "derived", "ignored", "external-reference"] },
+          "transform": { "type": "string" },
+          "note": { "type": "string" },
+          "provenance": { "$ref": "#/definitions/provenance" }
+        }
+      }
+    },
+    "queries": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "name", "entity", "filters", "orderBy", "provenance"],
+        "properties": {
+          "id": { "$ref": "#/definitions/id" },
+          "name": { "type": "string" },
+          "entity": { "$ref": "#/definitions/id" },
+          "filters": { "type": "array", "items": { "$ref": "#/definitions/id" } },
+          "orderBy": { "type": "array", "items": { "$ref": "#/definitions/id" } },
+          "pagination": { "enum": ["none", "offset", "keyset"] },
+          "frequency": { "enum": ["high", "medium", "low"] },
+          "sql": { "type": "string" },
+          "provenance": { "$ref": "#/definitions/provenance" }
+        }
+      }
+    },
+    "decisions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "status", "provenance"],
+        "properties": {
+          "id": { "$ref": "#/definitions/id" },
+          "title": { "type": "string" },
+          "context": { "type": "string" },
+          "decision": { "type": "string" },
+          "consequences": { "type": "string" },
+          "status": { "enum": ["proposed", "accepted", "rejected", "superseded"] },
+          "provenance": { "$ref": "#/definitions/provenance" }
+        }
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "text", "impact", "status", "provenance"],
+        "properties": {
+          "id": { "$ref": "#/definitions/id" },
+          "text": { "type": "string", "minLength": 1 },
+          "impact": { "enum": ["critical", "high", "medium", "low"] },
+          "status": { "enum": ["open", "answered", "deferred"] },
+          "answer": { "type": "string" },
+          "options": { "$ref": "#/definitions/strings" },
+          "consequences": { "type": "string" },
+          "relatedTo": { "$ref": "#/definitions/strings" },
+          "conflicts": { "type": "array", "items": { "$ref": "#/definitions/evidence" } },
+          "provenance": { "$ref": "#/definitions/provenance" }
+        }
+      }
+    },
+    "hypotheses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "statement", "status", "provenance"],
+        "properties": {
+          "id": { "$ref": "#/definitions/id" },
+          "statement": { "type": "string" },
+          "status": { "enum": ["unconfirmed", "confirmed", "rejected"] },
+          "consequences": { "type": "string" },
+          "relatedTo": { "$ref": "#/definitions/strings" },
+          "provenance": { "$ref": "#/definitions/provenance" }
+        }
+      }
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["revision", "at", "author", "summary", "hash"],
+        "properties": {
+          "revision": { "type": "integer" },
+          "at": { "type": "string" },
+          "author": { "$ref": "#/definitions/origin" },
+          "summary": { "type": "string" },
+          "hash": { "type": "string" }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "id": { "type": "string", "pattern": "^[A-Za-z0-9_.:-]{1,120}$" },
+    "strings": { "type": "array", "items": { "type": "string" } },
+    "origin": { "enum": ["user", "document", "code", "ai", "manual"] },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source"],
+      "properties": {
+        "source": { "$ref": "#/definitions/origin" },
+        "file": { "type": "string" },
+        "line": { "type": "integer", "minimum": 1 },
+        "excerpt": { "type": "string", "maxLength": 2000 },
+        "note": { "type": "string" }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["origin"],
+      "properties": {
+        "origin": { "$ref": "#/definitions/origin" },
+        "confidence": { "enum": ["confirmed", "high", "medium", "low"] },
+        "evidence": { "type": "array", "items": { "$ref": "#/definitions/evidence" } },
+        "rationale": { "type": "string" },
+        "manuallyEdited": { "type": "boolean" }
+      }
+    },
+    "referentialAction": { "enum": ["cascade", "restrict", "set-null", "no-action", "set-default"] },
+    "attribute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "domainType", "nullable", "domainOptional", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "column": { "type": "string" },
+        "description": { "type": "string" },
+        "domainType": {
+          "enum": ["string", "text", "integer", "bigint", "decimal", "money", "boolean", "date", "datetime", "time", "uuid", "json", "binary", "enum"]
+        },
+        "physicalType": { "type": "string" },
+        "nullable": { "type": "boolean" },
+        "domainOptional": { "type": "boolean" },
+        "requiredWhen": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["condition"],
+            "properties": { "condition": { "type": "string" }, "description": { "type": "string" } }
+          }
+        },
+        "primaryKey": { "type": "boolean" },
+        "unique": { "type": "boolean" },
+        "default": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": { "kind": { "enum": ["literal", "expression"] }, "value": { "type": "string" } }
+        },
+        "generated": { "enum": ["none", "identity", "uuid", "now", "computed"] },
+        "length": { "type": "integer", "minimum": 1 },
+        "precision": { "type": "integer", "minimum": 1 },
+        "scale": { "type": "integer", "minimum": 0 },
+        "enumRef": { "$ref": "#/definitions/id" },
+        "allowedValues": { "$ref": "#/definitions/strings" },
+        "constraints": { "$ref": "#/definitions/strings" },
+        "derived": { "type": "boolean" },
+        "sourceOfTruth": { "type": "string" },
+        "provenance": { "$ref": "#/definitions/provenance" },
+        "questions": { "$ref": "#/definitions/strings" }
+      }
+    },
+    "entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "persistence", "attributes", "uniqueConstraints", "checks", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "table": { "type": "string" },
+        "description": { "type": "string" },
+        "responsibility": { "type": "string" },
+        "aggregate": { "type": "string" },
+        "context": { "type": "string" },
+        "kind": { "enum": ["entity", "association", "reference"] },
+        "persistence": { "enum": ["persistent", "not-persisted", "external"] },
+        "attributes": { "type": "array", "items": { "$ref": "#/definitions/attribute" } },
+        "uniqueConstraints": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "attributes"],
+            "properties": {
+              "id": { "$ref": "#/definitions/id" },
+              "name": { "type": "string" },
+              "attributes": { "type": "array", "items": { "$ref": "#/definitions/id" }, "minItems": 1 }
+            }
+          }
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "expression"],
+            "properties": {
+              "id": { "$ref": "#/definitions/id" },
+              "name": { "type": "string" },
+              "expression": { "type": "string", "minLength": 1 },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "audit": { "type": "boolean" },
+        "tenantScoped": { "type": "boolean" },
+        "estimatedRows": { "type": "integer", "minimum": 0 },
+        "provenance": { "$ref": "#/definitions/provenance" },
+        "questions": { "$ref": "#/definitions/strings" }
+      }
+    },
+    "relationship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "from", "to", "cardinality", "required", "onDelete", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "from": { "$ref": "#/definitions/relationshipEnd" },
+        "to": { "$ref": "#/definitions/relationshipEnd" },
+        "cardinality": { "enum": ["N:1", "1:1", "N:N"] },
+        "required": { "type": "boolean" },
+        "identifying": { "type": "boolean" },
+        "through": { "$ref": "#/definitions/id" },
+        "onDelete": { "$ref": "#/definitions/referentialAction" },
+        "onUpdate": { "$ref": "#/definitions/referentialAction" },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    },
+    "relationshipEnd": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entity", "attributes"],
+      "properties": {
+        "entity": { "$ref": "#/definitions/id" },
+        "attributes": { "type": "array", "items": { "$ref": "#/definitions/id" } }
+      }
+    },
+    "contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "system", "kind", "direction", "fields", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string" },
+        "system": { "type": "string" },
+        "kind": { "enum": ["openapi", "json-schema", "dto", "manual"] },
+        "direction": { "enum": ["inbound", "outbound", "both"] },
+        "usage": { "type": "array", "items": { "enum": ["request", "response"] } },
+        "fields": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "type"],
+            "properties": {
+              "path": { "type": "string" },
+              "type": { "type": "string" },
+              "format": { "type": "string" },
+              "requiredInRequest": { "type": "boolean" },
+              "requiredInResponse": { "type": "boolean" },
+              "nullable": { "type": "boolean" },
+              "description": { "type": "string" }
+            }
+          }
+        },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    },
+    "actor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    },
+    "requirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text", "kind", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "text": { "type": "string" },
+        "kind": { "enum": ["functional", "non-functional", "constraint"] },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    },
+    "glossaryTerm": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "term", "definition", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "term": { "type": "string" },
+        "definition": { "type": "string" },
+        "synonyms": { "$ref": "#/definitions/strings" },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    },
+    "concept": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "kind", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string" },
+        "kind": { "enum": ["entity", "value-object", "event", "actor", "external", "process"] },
+        "description": { "type": "string" },
+        "context": { "type": "string" },
+        "persistenceRationale": { "type": "string" },
+        "mapsToEntity": { "$ref": "#/definitions/id" },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    },
+    "conceptRelation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "from", "to", "label", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "from": { "$ref": "#/definitions/id" },
+        "to": { "$ref": "#/definitions/id" },
+        "label": { "type": "string" },
+        "multiplicity": { "type": "string" },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text", "kind", "status", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "text": { "type": "string" },
+        "kind": { "enum": ["invariant", "validation", "policy", "derivation"] },
+        "appliesTo": { "$ref": "#/definitions/strings" },
+        "status": { "enum": ["confirmed", "proposed", "question"] },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "concept", "states", "transitions", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "concept": { "$ref": "#/definitions/id" },
+        "states": { "$ref": "#/definitions/strings" },
+        "transitions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "to"],
+            "properties": { "from": { "type": "string" }, "to": { "type": "string" }, "trigger": { "type": "string" } }
+          }
+        },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "provenance"],
+      "properties": {
+        "id": { "$ref": "#/definitions/id" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "provenance": { "$ref": "#/definitions/provenance" }
+      }
+    }
+  }
+}

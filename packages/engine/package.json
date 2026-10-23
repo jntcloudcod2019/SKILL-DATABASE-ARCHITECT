@@ -1,0 +1,8 @@
+{
+  "name": "@dbarchitect/engine",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "dependencies": { "@dbarchitect/core": "workspace:*", "@dbarchitect/validators": "workspace:*", "@dbarchitect/project-scanner": "workspace:*", "@dbarchitect/generators": "workspace:*", "@dbarchitect/adapter-sql": "workspace:*", "@dbarchitect/adapter-prisma": "workspace:*", "@dbarchitect/adapter-dotnet": "workspace:*", "@dbarchitect/adapter-ef-core": "workspace:*", "@dbarchitect/adapter-dapper": "workspace:*", "@dbarchitect/adapter-nodejs": "workspace:*", "@dbarchitect/adapter-contracts": "workspace:*" }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "database-architect-studio",
+  "displayName": "Database Architect Studio",
+  "version": "0.1.0",
+  "description": "Entenda o domínio, valide o modelo de dados, aprove visualmente e só então gere os artefatos (SQL, Prisma, EF Core, Dapper).",
+  "license": "MIT",
+  "keywords": [
+    "database",
+    "data-modeling",
+    "ef-core",
+    "prisma",
+    "dapper",
+    "mcp"
+  ],
+  "author": {
+    "name": "Database Architect Studio"
+  }
+}
